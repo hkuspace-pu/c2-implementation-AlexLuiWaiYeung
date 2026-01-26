@@ -14,6 +14,26 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Cw2">
         <activity
+            android:name=".MenuItemDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Cw2" />
+        <activity
+            android:name=".EditMenuItemActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddMenuItemActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Menu"
+            android:exported="false"
+            android:theme="@style/Theme.Cw2" />
+        <activity
+            android:name=".MenuItem"
+            android:exported="false" />
+        <activity
+            android:name=".MenuActivity"
+            android:exported="false" />
+        <activity
             android:name=".GuestHomeActivity"
             android:exported="false" />
         <activity

@@ -5,40 +5,87 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".StaffHomeActivity">
+    tools:context=".GuestHomeActivity">
 
     <TextView
-        android:id="@+id/StaffHome"
-        android:layout_width="wrap_content"
+        android:id="@+id/tv_welcome"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Staff HomePage"
+        android:text="Staff Dashboard"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.022" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="40dp"/>
 
-    <fragment
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
+    <!-- Menu Management Button -->
+    <Button
+        android:id="@+id/btn_menu"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/staff_nav_graph" />
+        android:layout_height="60dp"
+        android:text="Menu Management"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintTop_toBottomOf="@+id/tv_welcome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="40dp"
+        android:layout_marginHorizontal="16dp"/>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
+    <!-- Reservation Management Button -->
+    <Button
+        android:id="@+id/btn_reservations"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
+        android:text="Reservation Management"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/btn_menu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="16dp"/>
+
+    <!-- Notifications Button -->
+    <Button
+        android:id="@+id/btn_notifications"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Notifications"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/btn_reservations"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="16dp"/>
+
+    <!-- Profile Button -->
+    <Button
+        android:id="@+id/btn_profile"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Profile"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/btn_notifications"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="16dp"/>
+
+    <!-- Logout Button -->
+    <Button
+        android:id="@+id/btn_logout"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:text="Logout"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/btn_profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="40dp"
+        android:layout_marginHorizontal="16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
