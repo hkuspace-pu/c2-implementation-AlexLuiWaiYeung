@@ -59,13 +59,9 @@ public class GuestHomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnNotifications.setOnClickListener(v -> {
-            Intent intent = new Intent(GuestHomeActivity.this, NotificationActivity.class);
-            startActivity(intent);
-        });
-
         btnProfile.setOnClickListener(v -> {
             Intent intent = new Intent(GuestHomeActivity.this, ProfileActivity.class);
+            intent.putExtra("username", true);
             intent.putExtra("isStaff", false);
             startActivity(intent);
         });

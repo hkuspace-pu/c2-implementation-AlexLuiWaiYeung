@@ -14,6 +14,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Cw2">
         <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddReservationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ReservationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Cw2" />
+        <activity
             android:name=".MenuItemDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.Cw2" />
@@ -22,13 +32,6 @@
             android:exported="false" />
         <activity
             android:name=".AddMenuItemActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Menu"
-            android:exported="false"
-            android:theme="@style/Theme.Cw2" />
-        <activity
-            android:name=".MenuItem"
             android:exported="false" />
         <activity
             android:name=".MenuActivity"

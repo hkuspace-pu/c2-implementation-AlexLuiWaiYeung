@@ -62,13 +62,9 @@ public class StaffHomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnNotifications.setOnClickListener(v -> {
-            Intent intent = new Intent(StaffHomeActivity.this, NotificationActivity.class);
-            startActivity(intent);
-        });
-
         btnProfile.setOnClickListener(v -> {
             Intent intent = new Intent(StaffHomeActivity.this, ProfileActivity.class);
+            intent.putExtra("username", true);
             intent.putExtra("isStaff", true);
             startActivity(intent);
         });
