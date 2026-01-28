@@ -2,88 +2,129 @@ package com.example.cw2;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText etUsername, etPassword;
     private RadioGroup rgUserType;
     private Button btnLogin;
-
+    private AuthRepository authRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
+        // Initialize auth repository
+        authRepository = new AuthRepository(this);
 
-        // Find views
+        // Check if already logged in
+        if (authRepository.isLoggedIn()) {
+            User user = authRepository.getCurrentUser();
+            if (user != null) {
+                navigateToHome(user);
+                return;
+            }
+        }
+
+        initViews();
+        setupLoginButton();
+    }
+
+    private void initViews() {
         etUsername = findViewById(R.id.editTextText);
         etPassword = findViewById(R.id.editTextTextPassword);
         rgUserType = findViewById(R.id.rgUserType);
         btnLogin = findViewById(R.id.Login);
 
-        // Set click listener
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                attemptLogin();
+        // demo
+        etUsername.setText("restaurant_staff");
+        etPassword.setText("staff123");
+    }
+
+    private void setupLoginButton() {
+        btnLogin.setOnClickListener(v -> {
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter username and password", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            boolean isStaff = rgUserType.getCheckedRadioButtonId() == R.id.rgUserType;
+
+            // Call API for authentication
+            authRepository.login(username, password, isStaff, new AuthRepository.AuthCallback() {
+                @Override
+                public void onSuccess(User user) {
+                    runOnUiThread(() -> {
+                        btnLogin.setEnabled(true);
+                        etUsername.setEnabled(true);
+                        etPassword.setEnabled(true);
+
+                        Toast.makeText(MainActivity.this,
+                                "Welcome, " + user.getFullName(), Toast.LENGTH_SHORT).show();
+
+                        navigateToHome(user);
+                    });
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    runOnUiThread(() -> {
+                        btnLogin.setEnabled(true);
+                        etUsername.setEnabled(true);
+                        etPassword.setEnabled(true);
+
+                        // Try demo mode as fallback
+                        if (username.equals("admin") && password.equals("123456")) {
+                            authRepository.demoLogin(username, password, isStaff, new AuthRepository.AuthCallback() {
+                                @Override
+                                public void onSuccess(User user) {
+                                    runOnUiThread(() -> {
+                                        Toast.makeText(MainActivity.this,
+                                                "Demo Mode: Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                                        navigateToHome(user);
+                                    });
+                                }
+
+                                @Override
+                                public void onError(String demoError) {
+                                    runOnUiThread(() -> {
+                                        Toast.makeText(MainActivity.this,
+                                                "Login failed: " + errorMessage, Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+                            });
+                        } else {
+                            Toast.makeText(MainActivity.this,
+                                    "Login failed: " + errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
         });
     }
-
-    private void attemptLogin() {
-        String username = etUsername.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-
-        // Basic validation
-        if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Check which role is selected
-        int selectedId = rgUserType.getCheckedRadioButtonId();
-        boolean isStaff = (selectedId == R.id.rbStaff);
-
-        // TODO: Call your API to authenticate
-        // For now, simulate successful login
-        redirectToHomePage(isStaff);
-    }
-
-    private void redirectToHomePage(boolean isStaff) {
+    private void navigateToHome(User user) {
         Intent intent;
 
-        if (isStaff) {
-            // Redirect to Staff Home
-            intent = new Intent(this, StaffHomeActivity.class);
+        if (user.isStaff()) {
+            intent = new Intent(MainActivity.this, StaffHomeActivity.class);
         } else {
-            // Redirect to Guest Home
-            intent = new Intent(this, GuestHomeActivity.class);
+            intent = new Intent(MainActivity.this, GuestHomeActivity.class);
         }
 
-        // Pass user info if needed
-        intent.putExtra("username", etUsername.getText().toString());
-        intent.putExtra("isStaff", isStaff);
-
+        intent.putExtra("username", user.getUsername());
+        intent.putExtra("isStaff", user.isStaff());
+        intent.putExtra("fullName", user.getFullName());
         startActivity(intent);
-        finish(); // Close login activity so user can't go back
+        finish();
     }
 }

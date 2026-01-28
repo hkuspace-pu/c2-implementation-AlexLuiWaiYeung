@@ -10,8 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class GuestHomeActivity extends AppCompatActivity {
 
     private TextView tvWelcome;
-    private Button btnBrowseMenu, btnMakeReservation, btnMyReservations,
-            btnNotifications, btnProfile, btnLogout;
+    private Button btnBrowseMenu, btnMakeReservation, btnMyReservations, btnProfile, btnLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +29,6 @@ public class GuestHomeActivity extends AppCompatActivity {
         btnBrowseMenu = findViewById(R.id.btn_browse_menu);
         btnMakeReservation = findViewById(R.id.btn_make_reservation);
         btnMyReservations = findViewById(R.id.btn_my_reservations);
-        btnNotifications = findViewById(R.id.btn_notifications);
         btnProfile = findViewById(R.id.btn_profile);
         btnLogout = findViewById(R.id.btn_logout);
     }

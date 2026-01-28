@@ -3,6 +3,8 @@ package com.example.cw2;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
+
 public class MenuItem implements Parcelable {
     private int id;
     private String name;
@@ -17,6 +19,7 @@ public class MenuItem implements Parcelable {
         this.price = price;
         this.description = description;
         this.imageUrl = imageUrl;
+
     }
 
     // Getters and Setters
@@ -42,6 +45,9 @@ public class MenuItem implements Parcelable {
         price = in.readDouble();
         description = in.readString();
         imageUrl = in.readString();
+
+        // SerializedName("image_url") //JSON uses snake_case, Java uses camelCase
+        //private String imageUrl;
     }
 
     public static final Creator<MenuItem> CREATOR = new Creator<MenuItem>() {

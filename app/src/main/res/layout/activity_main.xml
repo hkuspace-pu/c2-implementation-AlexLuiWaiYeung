@@ -86,14 +86,14 @@
         app:layout_constraintVertical_bias="0.057">
 
         <RadioButton
-            android:id="@+id/rbGuest"
+            android:id="@+id/rb_Guest"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
             android:text="Guest" />
 
         <RadioButton
-            android:id="@+id/rbStaff"
+            android:id="@+id/rb_Staff"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Staff"

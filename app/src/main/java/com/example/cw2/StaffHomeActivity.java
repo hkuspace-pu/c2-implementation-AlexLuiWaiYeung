@@ -11,17 +11,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
 public class StaffHomeActivity extends AppCompatActivity {
     private TextView tvWelcome;
-    private Button btnMenu, btnReservations, btnNotifications, btnProfile, btnLogout;
-
+    private Button btnMenu, btnReservations, btnProfile, btnLogout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,7 +30,6 @@ public class StaffHomeActivity extends AppCompatActivity {
         tvWelcome = findViewById(R.id.tv_welcome);
         btnMenu = findViewById(R.id.btn_menu);
         btnReservations = findViewById(R.id.btn_reservations);
-        btnNotifications = findViewById(R.id.btn_notifications);
         btnProfile = findViewById(R.id.btn_profile);
         btnLogout = findViewById(R.id.btn_logout);
     }
