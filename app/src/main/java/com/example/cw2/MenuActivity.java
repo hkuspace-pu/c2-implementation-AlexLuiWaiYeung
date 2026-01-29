@@ -1,216 +1,144 @@
 package com.example.cw2;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MenuActivity extends AppCompatActivity {
+    private static final String TAG = "MenuActivity";
+    private static final int REQUEST_ADD_ITEM = 1;
+    private static final int REQUEST_EDIT_ITEM = 2;
 
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
-    private TextView tvEmptyState, tvTitle;
-    private Button btnAddNew, btnBack;
     private MenuAdapter adapter;
-    private boolean isStaff;
+    private List<MenuItem> menuItems = new ArrayList<>();
+    private FloatingActionButton fabAddItem;
+    private DemoData dbHelper;
 
+    private Boolean isStaff = false;
+
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
 
-        // Get user type from intent
+        Log.d(TAG, "MenuActivity onCreate");
+
+        // Initialize views
+        recyclerView = findViewById(R.id.recycler_view_menu);
+        fabAddItem = findViewById(R.id.fab_add_item);
+
+        // Get user role from Intent
         isStaff = getIntent().getBooleanExtra("isStaff", false);
+        Log.d(TAG, "User is staff: " + isStaff);
 
-        initViews();
-        setupRecyclerView();
-        loadMenuData();
-    }
+        // Initialize database
+        dbHelper = new DemoData(this);
 
-    private void initViews() {
-        recyclerView = findViewById(R.id.rv_menu);
-        progressBar = findViewById(R.id.progress_bar);
-        tvEmptyState = findViewById(R.id.tv_empty_state);
-        tvTitle = findViewById(R.id.tv_title);
-        btnAddNew = findViewById(R.id.btn_add_new);
-        btnBack = findViewById(R.id.btn_back);
+        // Setup RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setHasFixedSize(true);
 
-        // Set title based on user type
-        tvTitle.setText(isStaff ? "Menu Management" : "Our Menu");
+        // Load initial data
+        loadMenuItems();
 
-        // Back button
-        btnBack.setOnClickListener(v -> finish());
+        // Setup adapter with user role
+        adapter = new MenuAdapter(menuItems, this, isStaff);
+        recyclerView.setAdapter(adapter);
 
-        // Add new button (only for staff)
+        // Setup click listeners
+        adapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                Log.d(TAG, "Item clicked at position: " + position);
+                MenuItem item = adapter.getItemAtPosition(position);
+                if (item != null) {
+                    Log.d(TAG, "Opening ViewMenuItemActivity for: " + item.getName());
+                    Intent intent = new Intent(MenuActivity.this, MenuItemDetailActivity.class);
+                    intent.putExtra("menu_item_id", item.getId());
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(MenuActivity.this, "Menu item not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onEditClick(int position) {
+                Log.d(TAG, "Edit clicked at position: " + position);
+                MenuItem item = adapter.getItemAtPosition(position);
+                if (item != null) {
+                    Log.d(TAG, "Opening EditMenuItemActivity for: " + item.getName());
+                    Intent intent = new Intent(MenuActivity.this, EditMenuItemActivity.class);
+                    intent.putExtra("menu_item_id", item.getId());
+                    startActivityForResult(intent, REQUEST_EDIT_ITEM);
+                } else {
+                    Toast.makeText(MenuActivity.this, "Menu item not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onDeleteClick(int position) {
+                Log.d(TAG, "Delete clicked at position: " + position);
+                MenuItem item = adapter.getItemAtPosition(position);
+            }
+        });
+
+        // Setup FAB visibility based on user role
         if (isStaff) {
-            btnAddNew.setVisibility(View.VISIBLE);
-            btnAddNew.setOnClickListener(v -> {
+            fabAddItem.setVisibility(View.VISIBLE);
+            fabAddItem.setOnClickListener(v -> {
+                Log.d(TAG, "Add button clicked");
                 Intent intent = new Intent(MenuActivity.this, AddMenuItemActivity.class);
-                startActivityForResult(intent, 100);
+                startActivityForResult(intent, REQUEST_ADD_ITEM);
             });
         } else {
-            btnAddNew.setVisibility(View.GONE);
+            fabAddItem.setVisibility(View.GONE);
         }
     }
 
-    private void setupRecyclerView() {
-        // Set layout manager
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-
-        // Add divider between items
-        DividerItemDecoration divider = new DividerItemDecoration(this, layoutManager.getOrientation());
-        recyclerView.addItemDecoration(divider);
-
-        // Create adapter with click listener
-        adapter = new MenuAdapter(new ArrayList<>(), isStaff, new MenuAdapter.MenuClickListener() {
-            @Override
-            public void onItemClick(MenuItem item) {
-                // View item details
-                Intent intent = new Intent(MenuActivity.this, MenuItemDetailActivity.class);
-                intent.putExtra("menuItem", item);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onEditClick(MenuItem item) {
-                // Edit item
-                Intent intent = new Intent(MenuActivity.this, EditMenuItemActivity.class);
-                intent.putExtra("menuItem", item);
-                startActivityForResult(intent, 101);
-            }
-
-            @Override
-            public void onDeleteClick(MenuItem item) {
-                // Confirm delete
-                showDeleteConfirmation(item);
-            }
-
-            @Override
-            public void onOrderClick(MenuItem item) {
-                // Add to order/cart
-                addToOrder(item);
-            }
-        });
-
-        recyclerView.setAdapter(adapter);
-    }
-
-    private void loadMenuData() {
-        // Show loading
-        progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        tvEmptyState.setVisibility(View.GONE);
-
-        // Simulate network delay
-        recyclerView.postDelayed(() -> {
-            List<MenuItem> menuItems = getSampleMenuItems();
-
-            // Update UI
-            adapter.setMenuItems(menuItems);
-            progressBar.setVisibility(View.GONE);
-
-            if (menuItems.isEmpty()) {
-                tvEmptyState.setVisibility(View.VISIBLE);
-                recyclerView.setVisibility(View.GONE);
-            } else {
-                tvEmptyState.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
-            }
-        }, 1000);
-    }
-
-    private List<MenuItem> getSampleMenuItems() {
-        List<MenuItem> items = new ArrayList<>();
-
-        // Add sample menu items
-        items.add(new MenuItem(1, "Margherita Pizza", 12.99,
-                "Fresh tomatoes, mozzarella cheese, and basil", "pizza.jpg"));
-        items.add(new MenuItem(2, "Classic Burger", 9.99,
-                "Beef patty with lettuce, tomato, cheese, and special sauce", "burger.jpg"));
-        items.add(new MenuItem(3, "Caesar Salad", 8.50,
-                "Romaine lettuce with Caesar dressing, croutons, and parmesan", "salad.jpg"));
-        items.add(new MenuItem(4, "Spaghetti Carbonara", 14.99,
-                "Pasta with eggs, cheese, pancetta, and black pepper", "pasta.jpg"));
-        items.add(new MenuItem(5, "Grilled Salmon", 16.99,
-                "Atlantic salmon with lemon butter sauce and vegetables", "salmon.jpg"));
-        items.add(new MenuItem(6, "Chocolate Lava Cake", 6.99,
-                "Warm chocolate cake with molten center and vanilla ice cream", "cake.jpg"));
-
-        return items;
-    }
-
-    private void showDeleteConfirmation(MenuItem item) {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
-
-        builder.setTitle("Delete Menu Item");
-        builder.setMessage("Are you sure you want to delete \"" + item.getName() + "\"?");
-
-        builder.setPositiveButton("Delete", (dialog, which) -> {
-            // TODO: Call API to delete item
-            Toast.makeText(this, "Deleted: " + item.getName(), Toast.LENGTH_SHORT).show();
-            // Refresh the list
-            loadMenuData();
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
-    }
-
-    private void addToOrder(MenuItem item) {
-        Toast.makeText(this,
-                "Added " + item.getName() + " to your order",
-                Toast.LENGTH_SHORT).show();
-
-        // TODO: Implement cart/order logic
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 100) { // AddMenuItemActivity result
-                // Item added successfully
-                Toast.makeText(this, "Menu item added", Toast.LENGTH_SHORT).show();
-                loadMenuData(); // Refresh the list
-            } else if (requestCode == 101) { // EditMenuItemActivity result
-                // Check if item was updated or deleted
-                String action = data.getStringExtra("action");
-
-                if ("delete".equals(action)) {
-                    // Item was deleted
-                    int deletedItemId = data.getIntExtra("deletedItemId", -1);
-                    Toast.makeText(this, "Item deleted", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Item was updated
-                    MenuItem updatedItem = data.getParcelableExtra("updatedMenuItem");
-                    if (updatedItem != null) {
-                        Toast.makeText(this, "Updated: " + updatedItem.getName(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-                loadMenuData(); // Refresh the list
-            }
-        }
+    private void loadMenuItems() {
+        menuItems.clear();
+        List<MenuItem> loadedItems = dbHelper.getAllMenuItems();
+        menuItems.addAll(loadedItems);
+        Log.d(TAG, "Loaded " + menuItems.size() + " menu items");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh data when activity resumes
-        loadMenuData();
+        // Refresh data when returning from edit/add activities
+        loadMenuItems();
+        if (adapter != null) {
+            adapter.updateMenuItems(menuItems);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            loadMenuItems();
+            adapter.updateMenuItems(menuItems);
+        }
     }
 
 }

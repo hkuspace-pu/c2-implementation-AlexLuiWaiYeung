@@ -1,4 +1,11 @@
 package com.example.cw2;
+
+import static android.content.ContentValues.TAG;
+
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,137 +16,147 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cw2.R;
-import com.example.cw2.MenuItem;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder> {
-
-    public interface MenuClickListener {
-        void onItemClick(MenuItem item);
-        void onEditClick(MenuItem item);
-        void onDeleteClick(MenuItem item);
-        void onOrderClick(MenuItem item);
-    }
-
     private List<MenuItem> menuItems;
-    private boolean isStaffMode;
-    private final MenuClickListener clickListener;
+    private Context context;
+    private Boolean isStaff; // "staff" or "guest"
+    private OnItemClickListener listener;
 
-    public MenuAdapter(List<MenuItem> menuItems, boolean isStaffMode, MenuClickListener clickListener) {
-        this.menuItems = menuItems;
-        this.isStaffMode = isStaffMode;
-        this.clickListener = clickListener;
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+        void onEditClick(int position);
+        void onDeleteClick(int position);
     }
 
-    public void setStaffMode(boolean isStaffMode) {
-        this.isStaffMode = isStaffMode;
-        notifyDataSetChanged();
-    }
+    public MenuAdapter(List<MenuItem> menuItems, Context context, boolean isStaff) {
+        this.menuItems = new ArrayList<>(); // Always initialize
+        if (menuItems != null) {
+            this.menuItems.addAll(menuItems);
+        }
+        this.context = context;
+        this.isStaff = isStaff;
 
-    public void setMenuItems(List<MenuItem> menuItems) {
-        this.menuItems = menuItems;
-        notifyDataSetChanged();
+        Log.d(TAG, "Adapter created with " + this.menuItems.size() + " items");
     }
 
     @NonNull
     @Override
     public MenuViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        Log.d(TAG, "Creating view holder");
+
+        // Inflate the layout
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.activity_menu_item, parent, false);
+
+        // DEBUG: Set background color to see the item
+        view.setBackgroundColor(Color.parseColor("#E8F5E9")); // Light green
+
         return new MenuViewHolder(view);
+    }
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     @Override
     public void onBindViewHolder(@NonNull MenuViewHolder holder, int position) {
+        Log.d(TAG, "Binding position " + position + " of " + menuItems.size());
+
+        if (menuItems == null || position >= menuItems.size()) {
+            Log.e(TAG, "Invalid position or null list");
+            return;
+        }
+
         MenuItem item = menuItems.get(position);
-        holder.bind(item, isStaffMode, clickListener);
+        Log.d(TAG, "Item at position " + position + ": " + item.getName());
+
+        // CRITICAL: Make sure views exist and set text
+        if (holder.itemName != null) {
+            holder.itemName.setText(item.getName());
+            holder.itemName.setTextColor(Color.BLACK);
+            Log.d(TAG, "Set name: " + item.getName());
+        } else {
+            Log.e(TAG, "itemName is NULL!");
+        }
+
+        if (holder.itemDescription != null) {
+            holder.itemDescription.setText(item.getDescription());
+            Log.d(TAG, "Set description: " + item.getDescription());
+        }
+
+        if (holder.itemPrice != null) {
+            holder.itemPrice.setText("$" + item.getPrice());
+            holder.itemPrice.setTextColor(Color.RED);
+            Log.d(TAG, "Set price: $" + item.getPrice());
+        }
+
+        // Set button visibility based on staff status
+        if (holder.editButton != null && holder.deleteButton != null) {
+            if (isStaff) {
+                holder.editButton.setVisibility(View.VISIBLE);
+                holder.deleteButton.setVisibility(View.VISIBLE);
+
+                // Set click listeners for buttons
+                holder.editButton.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onEditClick(position);
+                    }
+                });
+
+                holder.deleteButton.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onDeleteClick(position);
+                    }
+                });
+            } else {
+                holder.editButton.setVisibility(View.GONE);
+                holder.deleteButton.setVisibility(View.GONE);
+            }
+        }
+
+        // Set click listener for entire item
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(position);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return menuItems.size();
+        return menuItems == null ? 0 : menuItems.size();
     }
 
-    static class MenuViewHolder extends RecyclerView.ViewHolder {
+    public void updateMenuItems(List<MenuItem> newItems) {
+        if (menuItems != null) {
+            menuItems.clear();
+            menuItems.addAll(newItems);
+            notifyDataSetChanged();
+        }
+    }
 
-        // 3 Columns
-        private ImageView ivMenuImage;          // Column 1: Image
-        private TextView tvMenuName;           // Column 2: Name
-        private TextView tvMenuDescription;    // Column 2: Description
-        private TextView tvMenuPrice;          // Column 3: Price
+    public MenuItem getItemAtPosition(int position) {
+        if (position >= 0 && position < getItemCount()) {
+            return menuItems.get(position);
+        }
+        return null;
+    }
 
-        // Action buttons
-        private View layoutStaffActions;
-        private Button btnEdit, btnDelete, btnOrder;
+    public class MenuViewHolder extends RecyclerView.ViewHolder {
+        ImageView itemImage;
+        TextView itemName, itemDescription, itemPrice;
+        Button editButton, deleteButton;
 
         public MenuViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            // Column 1: Image
-            ivMenuImage = itemView.findViewById(R.id.iv_menu_image);
-
-            // Column 2: Name & Description
-            tvMenuName = itemView.findViewById(R.id.tv_menu_name);
-            tvMenuDescription = itemView.findViewById(R.id.tv_menu_description);
-
-            // Column 3: Price
-            tvMenuPrice = itemView.findViewById(R.id.tv_menu_price);
-
-            // Action buttons
-            layoutStaffActions = itemView.findViewById(R.id.layout_staff_actions);
-            btnEdit = itemView.findViewById(R.id.btn_edit);
-            btnDelete = itemView.findViewById(R.id.btn_delete);
-            btnOrder = itemView.findViewById(R.id.btn_order);
-        }
-
-        public void bind(MenuItem item, boolean isStaffMode, MenuClickListener clickListener) {
-            // Column 1: Image
-            // TODO: Load image with Glide/Picasso
-            // For now, use placeholder
-            ivMenuImage.setImageResource(R.drawable.ic_food_placeholder);
-
-            // Column 2: Name & Description
-            tvMenuName.setText(item.getName());
-            tvMenuDescription.setText(item.getDescription());
-
-            // Column 3: Price
-            tvMenuPrice.setText(String.format("$%.2f", item.getPrice()));
-
-            // Show/hide appropriate buttons based on user role
-            if (isStaffMode) {
-                layoutStaffActions.setVisibility(View.VISIBLE);
-                btnOrder.setVisibility(View.GONE);
-
-                btnEdit.setOnClickListener(v -> {
-                    if (clickListener != null) {
-                        clickListener.onEditClick(item);
-                    }
-                });
-
-                btnDelete.setOnClickListener(v -> {
-                    if (clickListener != null) {
-                        clickListener.onDeleteClick(item);
-                    }
-                });
-            } else {
-                layoutStaffActions.setVisibility(View.GONE);
-                btnOrder.setVisibility(View.VISIBLE);
-
-                btnOrder.setOnClickListener(v -> {
-                    if (clickListener != null) {
-                        clickListener.onOrderClick(item);
-                    }
-                });
-            }
-
-            // Item click for viewing details
-            itemView.setOnClickListener(v -> {
-                if (clickListener != null) {
-                    clickListener.onItemClick(item);
-                }
-            });
+            itemImage = itemView.findViewById(R.id.item_image);
+            itemName = itemView.findViewById(R.id.item_name);
+            itemDescription = itemView.findViewById(R.id.item_description);
+            itemPrice = itemView.findViewById(R.id.item_price);
+            editButton = itemView.findViewById(R.id.btn_edit);
+            deleteButton = itemView.findViewById(R.id.btn_delete);
         }
     }
 }

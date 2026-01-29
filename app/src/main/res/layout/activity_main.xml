@@ -89,7 +89,6 @@
             android:id="@+id/rb_Guest"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
             android:text="Guest" />
 
         <RadioButton
@@ -97,6 +96,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Staff"
+            android:checked="true"
             tools:layout_editor_absoluteX="159dp"
             tools:layout_editor_absoluteY="311dp" />
 

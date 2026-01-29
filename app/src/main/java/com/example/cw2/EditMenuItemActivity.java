@@ -10,9 +10,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.cw2.MenuItem;
 
 public class EditMenuItemActivity extends AppCompatActivity {
 
@@ -111,21 +110,6 @@ public class EditMenuItemActivity extends AppCompatActivity {
             etItemPrice.requestFocus();
             return;
         }
-
-        double price;
-        try {
-            price = Double.parseDouble(priceStr);
-            if (price <= 0) {
-                etItemPrice.setError("Price must be greater than 0");
-                etItemPrice.requestFocus();
-                return;
-            }
-        } catch (NumberFormatException e) {
-            etItemPrice.setError("Please enter a valid price");
-            etItemPrice.requestFocus();
-            return;
-        }
-
         if (description.isEmpty()) {
             etItemDescription.setError("Please enter description");
             etItemDescription.requestFocus();
@@ -134,7 +118,7 @@ public class EditMenuItemActivity extends AppCompatActivity {
 
         // Update the MenuItem object
         menuItem.setName(name);
-        menuItem.setPrice(price);
+        menuItem.setPrice(priceStr);
         menuItem.setDescription(description);
 
         // Update image if changed
@@ -145,17 +129,17 @@ public class EditMenuItemActivity extends AppCompatActivity {
         // TODO: Call API to update item in database
         // For now, return updated item
 
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra("updatedMenuItem", menuItem);
-        setResult(RESULT_OK, resultIntent);
+        //ntent resultIntent = new Intent();
+        //resultIntent.putExtra("updatedMenuItem", menuItem);
+        //setResult(RESULT_OK, resultIntent);
 
         Toast.makeText(this, "Menu item updated successfully", Toast.LENGTH_SHORT).show();
         finish();
     }
 
     private void showDeleteConfirmation() {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
 
         builder.setTitle("Delete Menu Item");
         builder.setMessage("Are you sure you want to delete \"" + menuItem.getName() + "\"?");
@@ -204,29 +188,5 @@ public class EditMenuItemActivity extends AppCompatActivity {
                 btnSelectImage.setText("Change Image");
             }
         }
-    }
-
-    private boolean hasUnsavedChanges() {
-        String currentName = etItemName.getText().toString().trim();
-        String currentPrice = etItemPrice.getText().toString().trim();
-        String currentDescription = etItemDescription.getText().toString().trim();
-
-        return !currentName.equals(menuItem.getName()) ||
-                !currentPrice.equals(String.format("%.2f", menuItem.getPrice())) ||
-                !currentDescription.equals(menuItem.getDescription()) ||
-                imageChanged;
-    }
-
-    private void showUnsavedChangesDialog() {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
-
-        builder.setTitle("Unsaved Changes");
-        builder.setMessage("You have unsaved changes. Are you sure you want to discard them?");
-
-        builder.setPositiveButton("Discard", (dialog, which) -> finish());
-        builder.setNegativeButton("Keep Editing", null);
-
-        builder.show();
     }
 }

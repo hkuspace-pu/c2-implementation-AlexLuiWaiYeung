@@ -2,6 +2,7 @@ package com.example.cw2;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -23,15 +24,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize auth repository
         authRepository = new AuthRepository(this);
-
-        // Check if already logged in
-        if (authRepository.isLoggedIn()) {
-            User user = authRepository.getCurrentUser();
-            if (user != null) {
-                navigateToHome(user);
-                return;
-            }
-        }
 
         initViews();
         setupLoginButton();
@@ -58,7 +50,24 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            boolean isStaff = rgUserType.getCheckedRadioButtonId() == R.id.rgUserType;
+            boolean isStaff;
+            int selectedId = rgUserType.getCheckedRadioButtonId();
+
+            if (selectedId == R.id.rb_Staff) {  // Assuming rbStaff is your staff radio button ID
+                isStaff = true;
+                Log.d("Auth", "User selected: Staff");
+            } else if (selectedId == R.id.rb_Guest) {  // Assuming rbGuest is your guest radio button ID
+                isStaff = false;
+                Log.d("Auth", "User selected: Guest");
+            } else {
+                // No selection, default to guest
+                isStaff = false;
+                Log.d("Auth", "No selection, defaulting to Guest");
+                Toast.makeText(this, "Please select user type", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Log.d("Auth", "Sending to API - isStaff: " + isStaff);
 
             // Call API for authentication
             authRepository.login(username, password, isStaff, new AuthRepository.AuthCallback() {
@@ -116,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent;
 
         if (user.isStaff()) {
-            intent = new Intent(MainActivity.this, StaffHomeActivity.class);
+            intent = new Intent(this, StaffHomeActivity.class);
         } else {
-            intent = new Intent(MainActivity.this, GuestHomeActivity.class);
+            intent = new Intent(this, GuestHomeActivity.class);
         }
 
         intent.putExtra("username", user.getUsername());

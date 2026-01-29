@@ -1,126 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MenuItem">
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
 
-    <!-- Column 1: Image (Left) -->
-    <ImageView
-        android:id="@+id/iv_menu_image"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_food_placeholder"
-        android:contentDescription="Menu item image"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginEnd="16dp"/>
-
-    <!-- Column 2: Name & Description (Middle) -->
-    <TextView
-        android:id="@+id/tv_menu_name"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Item Name"
-        android:textSize="16sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@+id/iv_menu_image"
-        app:layout_constraintTop_toTopOf="@+id/iv_menu_image"
-        app:layout_constraintEnd_toStartOf="@+id/tv_menu_price"
-        app:layout_constraintHorizontal_bias="0"
-        android:layout_marginEnd="16dp"
-        tools:text="Margherita Pizza"/>
+        android:padding="12dp">
 
-    <TextView
-        android:id="@+id/tv_menu_description"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Item description here..."
-        android:textSize="14sp"
-        android:maxLines="2"
-        android:ellipsize="end"
-        app:layout_constraintStart_toStartOf="@+id/tv_menu_name"
-        app:layout_constraintTop_toBottomOf="@+id/tv_menu_name"
-        app:layout_constraintEnd_toEndOf="@+id/tv_menu_name"
-        app:layout_constraintBottom_toTopOf="@+id/layout_staff_actions"
-        android:layout_marginTop="4dp"
-        tools:text="Fresh tomatoes and mozzarella cheese"/>
+        <!-- Menu Item Image -->
+        <ImageView
+            android:id="@+id/item_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Column 3: Price (Right) -->
-    <TextView
-        android:id="@+id/tv_menu_price"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="$0.00"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/iv_menu_image"
-        tools:text="$12.99"/>
+        <!-- Menu Item Name -->
+        <TextView
+            android:id="@+id/item_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Item Name"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/item_price"
+            app:layout_constraintStart_toEndOf="@id/item_image"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Action Buttons Row (Below description) -->
-    <LinearLayout
-        android:id="@+id/layout_staff_actions"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="@+id/tv_menu_description"
-        app:layout_constraintTop_toBottomOf="@+id/tv_menu_description"
-        app:layout_constraintEnd_toEndOf="@+id/tv_menu_description"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginTop="8dp">
+        <!-- Menu Item Description -->
+        <TextView
+            android:id="@+id/item_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Item description goes here..."
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/item_image"
+            app:layout_constraintTop_toBottomOf="@id/item_name" />
 
+        <!-- Price -->
+        <TextView
+            android:id="@+id/item_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="$0.00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Edit Button (Staff only) -->
         <Button
             android:id="@+id/btn_edit"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
             android:text="Edit"
+            android:textColor="@color/white"
             android:textSize="12sp"
-            android:paddingVertical="4dp"
-            android:layout_marginEnd="4dp"/>
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@id/btn_delete"
+            app:layout_constraintStart_toEndOf="@id/item_image"
+            app:layout_constraintTop_toBottomOf="@id/item_description" />
 
+        <!-- Delete Button (Staff only) -->
         <Button
             android:id="@+id/btn_delete"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:text="Delete"
+            android:textColor="@color/white"
             android:textSize="12sp"
-            android:paddingVertical="4dp" />
-    </LinearLayout>
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_edit"
+            app:layout_constraintTop_toBottomOf="@id/item_description" />
 
-    <!-- Order Button for Guests -->
-    <Button
-        android:id="@+id/btn_order"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Order"
-        android:textSize="14sp"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
-        android:textColor="@android:color/white"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/tv_menu_price"
-        app:layout_constraintTop_toBottomOf="@+id/tv_menu_price"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginTop="8dp"/>
-
-    <!-- Divider Line -->
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        android:alpha="0.2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iv_menu_image"
-        android:layout_marginTop="16dp"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

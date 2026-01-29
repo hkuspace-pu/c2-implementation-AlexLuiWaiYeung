@@ -46,8 +46,6 @@ public class ReservationActivity extends AppCompatActivity {
 
     private void initViews() {
         recyclerView = findViewById(R.id.rv_reservations);
-        progressBar = findViewById(R.id.progress_bar);
-        tvEmptyState = findViewById(R.id.tv_empty_state);
         tvTitle = findViewById(R.id.tv_title);
         btnBack = findViewById(R.id.btn_back);
         btnNewReservation = findViewById(R.id.btn_new_reservation);

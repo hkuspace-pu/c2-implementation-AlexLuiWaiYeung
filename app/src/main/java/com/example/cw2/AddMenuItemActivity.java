@@ -12,8 +12,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.cw2.MenuItem;
-
 import java.util.UUID;
 
 public class AddMenuItemActivity extends AppCompatActivity {
@@ -23,6 +21,7 @@ public class AddMenuItemActivity extends AppCompatActivity {
     private ImageView ivItemImage;
     private Button btnSelectImage, btnSave, btnCancel;
 
+    private DemoData dbHelper;
     // Image handling
     private static final int PICK_IMAGE_REQUEST = 1;
     private String selectedImagePath = "";
@@ -44,6 +43,7 @@ public class AddMenuItemActivity extends AppCompatActivity {
         btnSelectImage = findViewById(R.id.btn_select_image);
         btnSave = findViewById(R.id.btn_save);
         btnCancel = findViewById(R.id.btn_cancel);
+        dbHelper = new DemoData(this);
     }
 
     private void setupButtonListeners() {
@@ -109,16 +109,13 @@ public class AddMenuItemActivity extends AppCompatActivity {
         MenuItem newItem = new MenuItem(
                 generateId(), // Generate unique ID
                 name,
-                price,
+                priceStr,
                 description,
                 selectedImagePath.isEmpty() ? "default_food.jpg" : selectedImagePath
         );
 
-        // TODO: Save to database/API
-        // For now, return result
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra("newMenuItem", newItem);
-        setResult(RESULT_OK, resultIntent);
+        // Insert into database
+        long result = dbHelper.addMenuItem(newItem);
 
         Toast.makeText(this, "Menu item added successfully", Toast.LENGTH_SHORT).show();
         finish();
@@ -146,25 +143,5 @@ public class AddMenuItemActivity extends AppCompatActivity {
                 btnSelectImage.setText("Change Image");
             }
         }
-    }
-
-    private boolean hasUnsavedChanges() {
-        return !etItemName.getText().toString().isEmpty() ||
-                !etItemPrice.getText().toString().isEmpty() ||
-                !etItemDescription.getText().toString().isEmpty() ||
-                !selectedImagePath.isEmpty();
-    }
-
-    private void showUnsavedChangesDialog() {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
-
-        builder.setTitle("Unsaved Changes");
-        builder.setMessage("You have unsaved changes. Are you sure you want to discard them?");
-
-        builder.setPositiveButton("Discard", (dialog, which) -> finish());
-        builder.setNegativeButton("Cancel", null);
-
-        builder.show();
     }
 }
