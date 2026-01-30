@@ -33,6 +33,10 @@ public class Reservation implements Parcelable {
         this.status = status;
     }
 
+    // Empty constructor
+    public Reservation() {
+    }
+
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -71,6 +75,27 @@ public class Reservation implements Parcelable {
         return reservationTime != null ? reservationTime : "N/A";
     }
 
+    public String getSimpleDetailsForGuest() {
+        return "Name: " + customerName + "\n" +
+                "Phone: " + customerPhone + "\n" +
+                "Date: " + getFormattedDate() + "\n" +
+                "Time: " + reservationTime + "\n" +
+                "Party: " + numberOfPeople + " people\n" +
+                "Status: " + status.toUpperCase();
+    }
+
+    public String getFullDetailsForStaff() {
+        return "Customer: " + customerName + "\n" +
+                "Phone: " + customerPhone + "\n" +
+                "Email: " + customerEmail + "\n" +
+                "Date: " + getFormattedDate() + "\n" +
+                "Time: " + reservationTime + "\n" +
+                "Party Size: " + numberOfPeople + " people\n" +
+                "Status: " + status.toUpperCase() + "\n" +
+                "Special Requests: " +
+                (specialRequests.isEmpty() ? "None" : specialRequests);
+    }
+
     // Parcelable implementation
     protected Reservation(Parcel in) {
         id = in.readInt();
@@ -78,7 +103,8 @@ public class Reservation implements Parcelable {
         customerPhone = in.readString();
         customerEmail = in.readString();
         numberOfPeople = in.readInt();
-        reservationDate = new Date(in.readLong());
+        long tmpDate = in.readLong();
+        reservationDate = tmpDate != -1 ? new Date(tmpDate) : null;
         reservationTime = in.readString();
         specialRequests = in.readString();
         status = in.readString();
@@ -108,29 +134,9 @@ public class Reservation implements Parcelable {
         dest.writeString(customerPhone);
         dest.writeString(customerEmail);
         dest.writeInt(numberOfPeople);
-        dest.writeLong(reservationDate != null ? reservationDate.getTime() : 0);
+        dest.writeLong(reservationDate != null ? reservationDate.getTime() : -1);
         dest.writeString(reservationTime);
         dest.writeString(specialRequests);
         dest.writeString(status);
-    }
-    public String getSimpleDetailsForGuest() {
-        return "Name: " + customerName + "\n" +
-                "Phone: " + customerPhone + "\n" +
-                "Date: " + getFormattedDate() + "\n" +
-                "Time: " + reservationTime + "\n" +
-                "Party: " + numberOfPeople + " people\n" +
-                "Status: " + status.toUpperCase();
-    }
-
-    public String getFullDetailsForStaff() {
-        return "Customer: " + customerName + "\n" +
-                "Phone: " + customerPhone + "\n" +
-                "Email: " + customerEmail + "\n" +
-                "Date: " + getFormattedDate() + "\n" +
-                "Time: " + reservationTime + "\n" +
-                "Party Size: " + numberOfPeople + " people\n" +
-                "Status: " + status.toUpperCase() + "\n" +
-                "Special Requests: " +
-                (specialRequests.isEmpty() ? "None" : specialRequests);
     }
 }

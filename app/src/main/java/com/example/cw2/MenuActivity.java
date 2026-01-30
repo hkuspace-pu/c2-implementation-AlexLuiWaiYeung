@@ -53,6 +53,7 @@ public class MenuActivity extends AppCompatActivity {
 
         // Initialize database
         dbHelper = new DemoData(this);
+        dbHelper.updateAllItemsWithDinnerDiningIcon();
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -83,15 +84,21 @@ public class MenuActivity extends AppCompatActivity {
 
             @Override
             public void onEditClick(int position) {
-                Log.d(TAG, "Edit clicked at position: " + position);
-                MenuItem item = adapter.getItemAtPosition(position);
-                if (item != null) {
-                    Log.d(TAG, "Opening EditMenuItemActivity for: " + item.getName());
-                    Intent intent = new Intent(MenuActivity.this, EditMenuItemActivity.class);
-                    intent.putExtra("menu_item_id", item.getId());
-                    startActivityForResult(intent, REQUEST_EDIT_ITEM);
-                } else {
-                    Toast.makeText(MenuActivity.this, "Menu item not found", Toast.LENGTH_SHORT).show();
+                if (isStaff) {
+                    MenuItem item = adapter.getItemAtPosition(position);
+                    if (item != null) {
+                        Log.d(TAG, "Editing item at position " + position +
+                                ", ID: " + item.getId() + ", Name: " + item.getName());
+
+                        Intent intent = new Intent(MenuActivity.this, EditMenuItemActivity.class);
+                        intent.putExtra("MENU_ITEM_ID", item.getId());  // Use consistent key
+                        intent.putExtra("MENU_ITEM_NAME", item.getName()); // Optional: pass name for debugging
+                        startActivityForResult(intent, REQUEST_EDIT_ITEM);
+                    } else {
+                        Toast.makeText(MenuActivity.this,
+                                "Error: Could not find menu item", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Item is null at position: " + position);
+                    }
                 }
             }
 

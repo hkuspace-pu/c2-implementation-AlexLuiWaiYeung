@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -14,179 +15,158 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class EditMenuItemActivity extends AppCompatActivity {
+    private static final String TAG = "EditMenuItemActivity";
 
-    // UI Components
-    private EditText etItemName, etItemPrice, etItemDescription;
-    private ImageView ivItemImage;
-    private Button btnSelectImage, btnUpdate, btnCancel, btnDelete;
-
-    // Data
-    private MenuItem menuItem;
-    private static final int PICK_IMAGE_REQUEST = 1;
-    private String selectedImagePath = "";
-    private boolean imageChanged = false;
+    private EditText etName, etDescription, etPrice, etImageUrl;
+    private Button btnUpdate, btnDelete;
+    private DemoData dbHelper;
+    private MenuItem currentItem;
+    private int menuItemId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_menu_item);
 
-        // Get the MenuItem from intent
-        menuItem = getIntent().getParcelableExtra("menuItem");
-        if (menuItem == null) {
-            Toast.makeText(this, "Error: No menu item data", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "=== EditMenuItemActivity Started ===");
+
+        // Initialize views
+        initViews();
+
+        // Get the menu item ID from Intent
+        menuItemId = getIntent().getIntExtra("MENU_ITEM_ID", -1);
+        String itemName = getIntent().getStringExtra("MENU_ITEM_NAME");
+
+        Log.d(TAG, "Received menuItemId: " + menuItemId);
+        Log.d(TAG, "Received itemName: " + itemName);
+
+        if (menuItemId == -1) {
+            Toast.makeText(this, "Error: No menu item selected", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "CRITICAL: No MENU_ITEM_ID found in Intent extras");
+
+            // Debug: List all extras
+            Bundle extras = getIntent().getExtras();
+            if (extras != null) {
+                for (String key : extras.keySet()) {
+                    Log.d(TAG, "Extra key: " + key + ", value: " + extras.get(key));
+                }
+            }
+
             finish();
             return;
         }
 
-        initViews();
-        loadMenuItemData();
-        setupButtonListeners();
+        // Initialize database
+        dbHelper = new DemoData(this);
+
+        // Load the menu item
+        loadMenuItem();
+
+        // Setup button listeners
+        setupListeners();
     }
 
     private void initViews() {
-        etItemName = findViewById(R.id.et_item_name);
-        etItemPrice = findViewById(R.id.et_item_price);
-        etItemDescription = findViewById(R.id.et_item_description);
-        ivItemImage = findViewById(R.id.iv_item_image);
-        btnSelectImage = findViewById(R.id.btn_select_image);
+        etName = findViewById(R.id.et_name);
+        etDescription = findViewById(R.id.et_description);
+        etPrice = findViewById(R.id.et_price);
+        etImageUrl = findViewById(R.id.et_image_url);
         btnUpdate = findViewById(R.id.btn_update);
-        btnCancel = findViewById(R.id.btn_cancel);
         btnDelete = findViewById(R.id.btn_delete);
     }
 
-    private void loadMenuItemData() {
-        // Pre-fill form with existing data
-        etItemName.setText(menuItem.getName());
-        etItemPrice.setText(String.format("%.2f", menuItem.getPrice()));
-        etItemDescription.setText(menuItem.getDescription());
+    private void loadMenuItem() {
+        currentItem = dbHelper.getMenuItemById(menuItemId);
 
-        // Set image (in real app, load from URL)
-        // For now, use placeholder
-        ivItemImage.setImageResource(R.drawable.ic_food_placeholder);
+        if (currentItem != null) {
+            Log.d(TAG, "Loaded item: " + currentItem.getName() +
+                    " (ID: " + currentItem.getId() + ")");
 
-        // Store original image path
-        selectedImagePath = menuItem.getImageUrl();
+            // Populate the form with existing data
+            etName.setText(currentItem.getName());
+            etDescription.setText(currentItem.getDescription());
+            etPrice.setText(currentItem.getPrice());
+            etImageUrl.setText(currentItem.getImageUrl());
+
+            // Set title
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle("Edit: " + currentItem.getName());
+            }
+        } else {
+            Toast.makeText(this, "Error: Menu item not found", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Could not find menu item with ID: " + menuItemId);
+            finish();
+        }
     }
 
-    private void setupButtonListeners() {
-        // Select Image Button
-        btnSelectImage.setOnClickListener(v -> openImagePicker());
-
-        // Update Button
+    private void setupListeners() {
         btnUpdate.setOnClickListener(v -> updateMenuItem());
 
-        // Cancel Button
-        btnCancel.setOnClickListener(v -> finish());
-
-        // Delete Button
         btnDelete.setOnClickListener(v -> showDeleteConfirmation());
-
-        // Image click to select
-        ivItemImage.setOnClickListener(v -> openImagePicker());
-    }
-
-    private void openImagePicker() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
 
     private void updateMenuItem() {
-        // Get input values
-        String name = etItemName.getText().toString().trim();
-        String priceStr = etItemPrice.getText().toString().trim();
-        String description = etItemDescription.getText().toString().trim();
+        // Get updated values
+        String name = etName.getText().toString().trim();
+        String description = etDescription.getText().toString().trim();
+        String price = etPrice.getText().toString().trim();
+        String imageUrl = etImageUrl.getText().toString().trim();
 
-        // Validate inputs
+        // Validation
         if (name.isEmpty()) {
-            etItemName.setError("Please enter item name");
-            etItemName.requestFocus();
+            etName.setError("Name is required");
             return;
         }
 
-        if (priceStr.isEmpty()) {
-            etItemPrice.setError("Please enter price");
-            etItemPrice.requestFocus();
-            return;
-        }
-        if (description.isEmpty()) {
-            etItemDescription.setError("Please enter description");
-            etItemDescription.requestFocus();
+        if (price.isEmpty()) {
+            etPrice.setError("Price is required");
             return;
         }
 
-        // Update the MenuItem object
-        menuItem.setName(name);
-        menuItem.setPrice(priceStr);
-        menuItem.setDescription(description);
+        // Update the current item
+        currentItem.setName(name);
+        currentItem.setDescription(description);
+        currentItem.setPrice(price);
+        currentItem.setImageUrl(imageUrl);
 
-        // Update image if changed
-        if (imageChanged && !selectedImagePath.isEmpty()) {
-            menuItem.setImageUrl(selectedImagePath);
+        // Update in database
+        int rowsAffected = dbHelper.updateMenuItem(currentItem);
+
+        if (rowsAffected > 0) {
+            Toast.makeText(this, "Menu item updated successfully", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Updated item ID: " + currentItem.getId());
+
+            // Set result and finish
+            setResult(RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Failed to update menu item", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Update failed for item ID: " + currentItem.getId());
         }
-
-        // TODO: Call API to update item in database
-        // For now, return updated item
-
-        //ntent resultIntent = new Intent();
-        //resultIntent.putExtra("updatedMenuItem", menuItem);
-        //setResult(RESULT_OK, resultIntent);
-
-        Toast.makeText(this, "Menu item updated successfully", Toast.LENGTH_SHORT).show();
-        finish();
     }
 
     private void showDeleteConfirmation() {
-        AlertDialog.Builder builder =
-                new AlertDialog.Builder(this);
-
-        builder.setTitle("Delete Menu Item");
-        builder.setMessage("Are you sure you want to delete \"" + menuItem.getName() + "\"?");
-        builder.setCancelable(true);
-
-        builder.setPositiveButton("Delete", (dialog, which) -> {
-            // Delete the item
-            deleteMenuItem();
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
-            dialog.dismiss();
-        });
-
-        builder.show();
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Menu Item")
+                .setMessage("Are you sure you want to delete \"" + currentItem.getName() + "\"?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteMenuItem())
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void deleteMenuItem() {
-        // TODO: Call API to delete item from database
-        // For now, return delete signal
+        int rowsDeleted = dbHelper.deleteMenuItem(currentItem.getId());
 
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra("deletedItemId", menuItem.getId());
-        resultIntent.putExtra("action", "delete");
-        setResult(RESULT_OK, resultIntent);
+        if (rowsDeleted > 0) {
+            Toast.makeText(this, "Menu item deleted", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Deleted item ID: " + currentItem.getId());
 
-        Toast.makeText(this, "Menu item deleted", Toast.LENGTH_SHORT).show();
-        finish();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
-            Uri selectedImageUri = data.getData();
-            if (selectedImageUri != null) {
-                // Set image to ImageView
-                ivItemImage.setImageURI(selectedImageUri);
-
-                // Get image path
-                selectedImagePath = selectedImageUri.toString();
-                imageChanged = true;
-
-                // Update button text
-                btnSelectImage.setText("Change Image");
-            }
+            // Set result as deleted
+            setResult(RESULT_OK);
+            finish();
+        } else {
+            Toast.makeText(this, "Failed to delete menu item", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Delete failed for item ID: " + currentItem.getId());
         }
     }
 }

@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,7 +95,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
         if (holder.editButton != null && holder.deleteButton != null) {
             if (isStaff) {
                 holder.editButton.setVisibility(View.VISIBLE);
-                holder.deleteButton.setVisibility(View.VISIBLE);
+                holder.deleteButton.setVisibility(View.GONE);
 
                 // Set click listeners for buttons
                 holder.editButton.setOnClickListener(v -> {
@@ -116,6 +115,8 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
             }
         }
 
+        loadDinnerDiningIcon(holder, item);
+
         // Set click listener for entire item
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
@@ -123,7 +124,18 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
             }
         });
     }
+    private void loadDinnerDiningIcon(MenuViewHolder holder, MenuItem item) {
+        try {
+            // Method 1: Directly set the icon (if not using URL)
+            holder.itemImage.setImageResource(R.drawable.ic_outline_dinner_dining_24);
 
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading dinner_dining icon: " + e.getMessage());
+
+            // Fallback to Android default icon
+            holder.itemImage.setImageResource(android.R.drawable.ic_menu_camera);
+        }
+    }
     @Override
     public int getItemCount() {
         return menuItems == null ? 0 : menuItems.size();

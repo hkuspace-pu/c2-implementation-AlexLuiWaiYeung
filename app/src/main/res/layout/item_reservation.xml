@@ -1,118 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_reservation"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    android:background="?android:attr/selectableItemBackground">
+    android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:padding="16dp">
 
-    <!-- First Row: Name and Status -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Customer Name -->
+    <TextView
+        android:id="@+id/tv_customer_name"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:text="John Doe"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tv_status"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="John Doe" />
 
-        <!-- Customer Name -->
-        <TextView
-            android:id="@+id/tv_customer_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Customer Name"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end"
-            tools:text="John Smith"/>
+    <!-- Status Badge -->
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp"
+        android:text="PENDING"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="CONFIRMED" />
 
-        <!-- Status -->
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PENDING"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            tools:text="CONFIRMED"/>
-
-    </LinearLayout>
-
-    <!-- Date & Time -->
+    <!-- Date and Time -->
     <TextView
         android:id="@+id/tv_date_time"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Date • Time"
-        android:textSize="14sp"
         android:layout_marginTop="8dp"
-        tools:text="Mon, Jan 15, 2025 • 19:30"/>
+        android:text="Saturday, 1 Feb 2025 • 7:30 PM"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_customer_name"
+        tools:text="Saturday, 1 Feb 2025 • 7:30 PM" />
 
-    <!-- Third Row: Party Size and Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Party Size -->
+    <TextView
+        android:id="@+id/tv_party_size"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="4 people"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_date_time"
+        tools:text="4 people" />
+
+    <!-- Buttons Container -->
+    <LinearLayout
+        android:id="@+id/buttons_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="end"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="12dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_party_size">
 
-        <!-- Party Size -->
-        <TextView
-            android:id="@+id/tv_party_size"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="2 people"
-            android:textSize="14sp"
-            tools:text="4 people"/>
-
-        <!-- Action Buttons -->
-        <LinearLayout
+        <!-- Details Button -->
+        <Button
+            android:id="@+id/btn_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginEnd="8dp"
+            android:text="Details"
+            android:textColor="@color/white"
+            tools:text="Details" />
 
-            <!-- Details Button -->
-            <Button
-                android:id="@+id/btn_details"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Details"
-                android:textSize="12sp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:layout_marginEnd="8dp"/>
+        <!-- Cancel Button -->
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"
+            android:textColor="@color/white"
+            tools:text="Cancel" />
 
-            <!-- Confirm Button (Staff only) -->
-            <Button
-                android:id="@+id/btn_confirm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Confirm"
-                android:textSize="12sp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:visibility="gone"
-                android:layout_marginEnd="8dp"/>
-
-            <!-- Cancel Button -->
-            <Button
-                android:id="@+id/btn_cancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cancel"
-                android:textSize="12sp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"/>
-
-        </LinearLayout>
+        <!-- Confirm Button (Staff only) -->
+        <Button
+            android:id="@+id/btn_confirm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Confirm"
+            android:textColor="@color/white"
+            tools:text="Confirm" />
 
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

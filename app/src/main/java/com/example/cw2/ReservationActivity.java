@@ -3,230 +3,211 @@ package com.example.cw2;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import com.example.cw2.DemoData;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.cw2.ReservationAdapter;
-import com.example.cw2.Reservation;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
-public class ReservationActivity extends AppCompatActivity {
+public class ReservationActivity extends AppCompatActivity implements
+        ReservationAdapter.ReservationClickListener {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
-    private TextView tvEmptyState, tvTitle;
-    private Button btnBack, btnNewReservation;
+    private TextView tvEmpty;
+    private FloatingActionButton fabAdd;
+    private Toolbar toolbar;
+
     private ReservationAdapter adapter;
-    private boolean isStaff;
-    private String currentUser;
+    private List<Reservation> reservationList = new ArrayList<>();
+
+    private boolean isStaff = false;
+    private String currentUsername;
+
+    DemoData db = new DemoData(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reservation);
 
-        // Get user info from intent
+        // Get user info
         isStaff = getIntent().getBooleanExtra("isStaff", false);
-        currentUser = getIntent().getStringExtra("username");
+        currentUsername = getIntent().getStringExtra("username");
 
         initViews();
+        setupToolbar();
         setupRecyclerView();
+        setupFab();
         loadReservations();
+        db.debugTable();
     }
 
     private void initViews() {
+        toolbar = findViewById(R.id.toolbar);
         recyclerView = findViewById(R.id.rv_reservations);
-        tvTitle = findViewById(R.id.tv_title);
-        btnBack = findViewById(R.id.btn_back);
-        btnNewReservation = findViewById(R.id.btn_new_reservation);
+        progressBar = findViewById(R.id.progress_bar);
+        tvEmpty = findViewById(R.id.tv_empty);
+        fabAdd = findViewById(R.id.fab_add);
 
-        // Set title based on user role
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
+        TextView tvTitle = toolbar.findViewById(R.id.tv_title);
         tvTitle.setText(isStaff ? "All Reservations" : "My Reservations");
+    }
 
-        // Back button
-        btnBack.setOnClickListener(v -> finish());
+    private void setupRecyclerView() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
 
-        // New reservation button (only for guests)
+        adapter = new ReservationAdapter(reservationList, isStaff, this);
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void setupFab() {
         if (isStaff) {
-            btnNewReservation.setVisibility(View.GONE);
+            fabAdd.setVisibility(View.GONE);
         } else {
-            btnNewReservation.setVisibility(View.VISIBLE);
-            btnNewReservation.setOnClickListener(v -> {
-                Intent intent = new Intent(ReservationActivity.this, AddReservationActivity.class);
-                intent.putExtra("customerName", currentUser);
+            fabAdd.setVisibility(View.VISIBLE);
+            fabAdd.setOnClickListener(v -> {
+                Intent intent = new Intent(this, AddReservationActivity.class);
+                intent.putExtra("customerName", currentUsername);
                 startActivityForResult(intent, 100);
             });
         }
     }
 
-    private void setupRecyclerView() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        adapter = new ReservationAdapter(new ArrayList<>(), isStaff,
-                new ReservationAdapter.ReservationClickListener() {
-                    @Override
-                    public void onReservationClick(Reservation reservation) {
-                        // Show reservation details
-                        showReservationDetails(reservation);
-                    }
-
-                    @Override
-                    public void onCancelClick(Reservation reservation) {
-                        // Cancel reservation
-                        cancelReservation(reservation);
-                    }
-
-                    @Override
-                    public void onConfirmClick(Reservation reservation) {
-                        // Confirm reservation (staff only)
-                        confirmReservation(reservation);
-                    }
-                });
-
-        recyclerView.setAdapter(adapter);
-    }
-
     private void loadReservations() {
-        progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        tvEmptyState.setVisibility(View.GONE);
+        showLoading(true);
 
-        // Simulate API call delay
-        recyclerView.postDelayed(() -> {
-            List<Reservation> reservations = getSampleReservations();
+        new Thread(() -> {
+            // Use DemoData to get reservations
+            DemoData dbHelper = new DemoData(this);
 
-            // For guests, filter to show only their reservations
-            if (!isStaff && currentUser != null) {
-                List<Reservation> userReservations = new ArrayList<>();
-                for (Reservation r : reservations) {
-                    if (currentUser.equalsIgnoreCase(r.getCustomerName())) {
-                        userReservations.add(r);
-                    }
-                }
-                adapter.setReservations(userReservations);
+            List<Reservation> reservations;
+            if (!isStaff) {
+                // For guest: get only their reservations
+                reservations = dbHelper.getReservationsByGuest(currentUsername);
             } else {
-                adapter.setReservations(reservations);
+                // For staff: get all reservations
+                reservations = dbHelper.getAllReservations();
             }
 
-            progressBar.setVisibility(View.GONE);
-            if (adapter.getItemCount() == 0) {
-                tvEmptyState.setVisibility(View.VISIBLE);
-                recyclerView.setVisibility(View.GONE);
-                String emptyMessage = isStaff ?
-                        "No reservations found" :
-                        "You have no reservations\nTap '+ New Reservation' to book";
-                tvEmptyState.setText(emptyMessage);
-            } else {
-                tvEmptyState.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
-            }
-        }, 1500);
+            runOnUiThread(() -> {
+                reservationList.clear();
+                reservationList.addAll(reservations);
+                adapter.updateReservations(reservationList);
+                checkEmptyState();
+                showLoading(false);
+            });
+        }).start();
     }
 
     private List<Reservation> getSampleReservations() {
-        List<Reservation> reservations = new ArrayList<>();
-        Calendar calendar = Calendar.getInstance();
-
-        // Add sample reservations
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        reservations.add(new Reservation(1, "John Smith", "555-0123", "john@email.com",
-                4, calendar.getTime(), "19:30", "Window seat preferred", "confirmed"));
-
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        reservations.add(new Reservation(2, currentUser != null ? currentUser : "Jane Doe", "555-0456", "jane@email.com",
-                2, calendar.getTime(), "20:00", "", "pending"));
-
-        calendar.add(Calendar.DAY_OF_MONTH, 2);
-        reservations.add(new Reservation(3, "Robert Johnson", "555-0789", "robert@email.com",
-                6, calendar.getTime(), "18:00", "Birthday party", "confirmed"));
-
-        calendar.add(Calendar.DAY_OF_MONTH, -1);
-        reservations.add(new Reservation(4, "Mary Williams", "555-0912", "mary@email.com",
-                3, calendar.getTime(), "21:00", "Vegetarian options needed", "cancelled"));
-
-        return reservations;
+        List<Reservation> list = new ArrayList<>();
+        // Add your sample reservations here
+        return list;
     }
 
-    private void showReservationDetails(Reservation reservation) {
-        if (isStaff) {
-            // For staff: Show detailed info in Toast
-            String details =
-                    "Customer: " + reservation.getCustomerName() + "\n" +
-                            "Phone: " + reservation.getCustomerPhone() + "\n" +
-                            "Email: " + reservation.getCustomerEmail() + "\n" +
-                            "Date: " + reservation.getFormattedDate() + "\n" +
-                            "Time: " + reservation.getFormattedTime() + "\n" +
-                            "Party Size: " + reservation.getNumberOfPeople() + " people\n" +
-                            "Status: " + reservation.getStatus().toUpperCase() + "\n" +
-                            "Requests: " +
-                            (reservation.getSpecialRequests().isEmpty() ? "None" : reservation.getSpecialRequests());
+    private void filterGuestReservations() {
+        List<Reservation> filtered = new ArrayList<>();
+        for (Reservation r : reservationList) {
+            if (r.getCustomerName().equalsIgnoreCase(currentUsername)) {
+                filtered.add(r);
+            }
+        }
+        reservationList.clear();
+        reservationList.addAll(filtered);
+    }
 
-            Toast.makeText(this, details, Toast.LENGTH_LONG).show();
+    private void showLoading(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        tvEmpty.setVisibility(View.GONE);
+    }
+
+    private void checkEmptyState() {
+        if (reservationList.isEmpty()) {
+            tvEmpty.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
         } else {
-            // For guests: Show simplified info in Toast
-            String details =
-                    "Name: " + reservation.getCustomerName() + "\n" +
-                            "Phone: " + reservation.getCustomerPhone() + "\n" +
-                            "Date: " + reservation.getFormattedDate() + "\n" +
-                            "Time: " + reservation.getFormattedTime() + "\n" +
-                            "Party Size: " + reservation.getNumberOfPeople() + " people\n" +
-                            "Status: " + reservation.getStatus().toUpperCase();
-
-            Toast.makeText(this, details, Toast.LENGTH_LONG).show();
+            tvEmpty.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
         }
     }
 
-    private void cancelReservation(Reservation reservation) {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(this);
+    // ===== Click Listener Methods =====
 
+    @Override
+    public void onReservationClick(Reservation reservation) {
+        // Show details
+        String details = isStaff ?
+                reservation.getFullDetailsForStaff() :
+                reservation.getSimpleDetailsForGuest();
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Reservation Details")
+                .setMessage(details)
+                .setPositiveButton("OK", null)
+                .setNeutralButton("Edit", (dialog, which) -> {
+                    openEditReservation(reservation);
+                })
+                .show();
+    }
+
+    private void openEditReservation(Reservation reservation) {
+        Intent intent = new Intent(this, EditReservationActivity.class);
+        intent.putExtra("reservation", reservation);
+        intent.putExtra("isStaff", isStaff);
+        startActivityForResult(intent, 200);
+    }
+
+    @Override
+    public void onCancelClick(Reservation reservation) {
         String message = isStaff ?
                 "Cancel reservation for " + reservation.getCustomerName() + "?" :
                 "Cancel your reservation?";
 
-        builder.setTitle("Cancel Reservation");
-        builder.setMessage(message);
-
-        builder.setPositiveButton("Cancel Reservation", (dialog, which) -> {
-            // TODO: Call API to cancel reservation
-            reservation.setStatus("cancelled");
-            adapter.notifyDataSetChanged();
-            Toast.makeText(this, "Reservation cancelled", Toast.LENGTH_SHORT).show();
-        });
-
-        builder.setNegativeButton("Keep", null);
-        builder.show();
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Cancel Reservation")
+                .setMessage(message)
+                .setPositiveButton("Cancel Reservation", (dialog, which) -> {
+                    reservation.setStatus("cancelled");
+                    adapter.notifyDataSetChanged();
+                    Toast.makeText(this, "Reservation cancelled", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Keep", null)
+                .show();
     }
 
-    private void confirmReservation(Reservation reservation) {
-        // Staff only - confirm a pending reservation
+    @Override
+    public void onConfirmClick(Reservation reservation) {
+        // Staff only - confirm pending reservation
         reservation.setStatus("confirmed");
         adapter.notifyDataSetChanged();
         Toast.makeText(this, "Reservation confirmed", Toast.LENGTH_SHORT).show();
     }
 
+    // ===== Other Methods =====
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 100 && resultCode == RESULT_OK) {
-            // New reservation added
-            Reservation newReservation = data.getParcelableExtra("newReservation");
-            if (newReservation != null) {
-                Toast.makeText(this,
-                        "Reservation created for " + newReservation.getCustomerName(),
-                        Toast.LENGTH_SHORT).show();
-            }
-            loadReservations(); // Refresh list
+        if ((requestCode == 100 || requestCode == 200) && resultCode == RESULT_OK) {
+            loadReservations(); // Refresh after adding/editing
         }
     }
 

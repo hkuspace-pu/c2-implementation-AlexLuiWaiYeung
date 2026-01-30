@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.314" />
+        app:layout_constraintVertical_bias="0.373" />
 
     <Button
         android:id="@+id/Login"
@@ -45,7 +45,7 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Welcome"
-        app:layout_constraintVertical_bias="0.406" />
+        app:layout_constraintVertical_bias="0.517" />
 
     <EditText
         android:id="@+id/editTextTextPassword"
@@ -59,7 +59,7 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextText"
-        app:layout_constraintVertical_bias="0.305" />
+        app:layout_constraintVertical_bias="0.453" />
 
     <ImageView
         android:id="@+id/imageView4"
@@ -67,10 +67,9 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.033"
+        app:layout_constraintVertical_bias="0.12"
         app:srcCompat="@drawable/images" />
 
     <RadioGroup
@@ -83,7 +82,7 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Welcome"
-        app:layout_constraintVertical_bias="0.057">
+        app:layout_constraintVertical_bias="0.231">
 
         <RadioButton
             android:id="@+id/rb_Guest"
@@ -95,8 +94,8 @@
             android:id="@+id/rb_Staff"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Staff"
             android:checked="true"
+            android:text="Staff"
             tools:layout_editor_absoluteX="159dp"
             tools:layout_editor_absoluteY="311dp" />
 
