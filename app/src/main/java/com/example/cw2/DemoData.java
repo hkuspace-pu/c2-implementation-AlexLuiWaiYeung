@@ -31,13 +31,16 @@ public class DemoData extends SQLiteOpenHelper {
     // === RESERVATION TABLE (new) ===
     public static final String TABLE_RESERVATION = "reservation";
     public static final String COLUMN_RESERVATION_ID = "reservation_id";
-    public static final String COLUMN_CUSTOMER_NAME = "customer_name";
-    public static final String COLUMN_CUSTOMER_PHONE = "customer_phone";
-    public static final String COLUMN_CUSTOMER_EMAIL = "customer_email";
-    public static final String COLUMN_NUMBER_OF_PEOPLE = "number_of_people";
-    public static final String COLUMN_RESERVATION_DATE = "reservation_date";
-    public static final String COLUMN_RESERVATION_TIME = "reservation_time";
-    public static final String COLUMN_SPECIAL_REQUESTS = "special_requests";
+    public static final String COLUMN_GUEST_NAME = "guest_name";
+
+    //public static final String COLUMN_CUSTOMER_PHONE = "customer_phone";
+
+    //public static final String COLUMN_CUSTOMER_EMAIL = "customer_email";
+
+    public static final String COLUMN_PARTY_SIZE = "party_size";
+    public static final String COLUMN_DATE = "reservation_date";
+    public static final String COLUMN_TIME = "reservation_time";
+    //public static final String COLUMN_SPECIAL_REQUESTS = "special_requests";
     public static final String COLUMN_STATUS = "status";
     public DemoData(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -56,15 +59,17 @@ public class DemoData extends SQLiteOpenHelper {
         db.execSQL(CREATE_MENU_TABLE);
 
         // Create Reservation table
-        String CREATE_RESERVATION_TABLE = "CREATE TABLE " + TABLE_RESERVATION + "("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "guest_name TEXT,"      // Simple name to match queries
-                + "date TEXT,"            // Store as text (not timestamp)
-                + "time TEXT,"
-                + "party_size INTEGER,"
-                + "status TEXT DEFAULT 'pending'"
-                + ")";
+        String CREATE_RESERVATION_TABLE = "CREATE TABLE " + TABLE_RESERVATION + " (" +
+                COLUMN_RESERVATION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + // id
+                COLUMN_GUEST_NAME + " TEXT NOT NULL," + // guest_name
+                COLUMN_DATE + " TEXT NOT NULL," + // date (not reservation_date)
+                COLUMN_TIME + " TEXT NOT NULL," + // time (not reservation_time)
+                COLUMN_PARTY_SIZE + " INTEGER DEFAULT 1," + // party_size (not number_of_people)
+                COLUMN_STATUS + " TEXT DEFAULT 'pending'" + // status
+                ")";
+
         db.execSQL(CREATE_RESERVATION_TABLE);
+        Log.d(TAG, "Created reservation table with correct schema");
 
         // Insert demo data
         insertDemoData(db);
@@ -276,34 +281,61 @@ public class DemoData extends SQLiteOpenHelper {
 
 
     // Add a new reservation
+    /* public long addReservation(Reservation reservation) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        // Use ONLY the columns that exist in your table:
+        values.put(COLUMN_GUEST_NAME, reservation.getCustomerName());
+        values.put(COLUMN_DATE, reservation.getReservationDate());
+        values.put(COLUMN_TIME, reservation.getReservationTime());
+        values.put(COLUMN_PARTY_SIZE, reservation.getNumberOfPeople());
+        values.put(COLUMN_STATUS, reservation.getStatus());
+
+        // DO NOT USE THESE - they don't exist in your table:
+        // values.put("customer_email", ...); // Doesn't exist
+        // values.put("customer_phone", ...); // Doesn't exist
+        // values.put("special_requests", ...); // Doesn't exist
+        // values.put("number_of_people", ...); // Wrong column name
+
+        long result = db.insert(TABLE_RESERVATION, null, values);
+        db.close();
+
+        Log.d(TAG, "Added reservation ID: " + result + " for " + reservation.getCustomerName());
+        return result;
+    } */
+
     public long addReservation(Reservation reservation) {
         SQLiteDatabase db = this.getWritableDatabase();
-        long id = -1;
+        ContentValues values = new ContentValues();
 
-        try {
-            ContentValues values = new ContentValues();
-            values.put(COLUMN_CUSTOMER_NAME, reservation.getCustomerName());
-            values.put(COLUMN_CUSTOMER_PHONE, reservation.getCustomerPhone());
-            values.put(COLUMN_CUSTOMER_EMAIL, reservation.getCustomerEmail());
-            values.put(COLUMN_NUMBER_OF_PEOPLE, reservation.getNumberOfPeople());
-            values.put(COLUMN_RESERVATION_DATE, reservation.getReservationDate().getTime()); // Store as timestamp
-            values.put(COLUMN_RESERVATION_TIME, reservation.getReservationTime());
-            values.put(COLUMN_SPECIAL_REQUESTS, reservation.getSpecialRequests());
-            values.put(COLUMN_STATUS, reservation.getStatus());
-
-            id = db.insert(TABLE_RESERVATION, null, values);
-
-            Log.d(TAG, "Added reservation with ID: " + id +
-                    " for: " + reservation.getCustomerName());
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error adding reservation: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            db.close();
+        // Convert Date to String for date field
+        String dateString = "";
+        if (reservation.getReservationDate() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            dateString = sdf.format(reservation.getReservationDate());
         }
 
-        return id;
+        // Get time as String (it's already a String in Reservation class)
+        String timeString = reservation.getReservationTime();
+
+        // Debug log
+        Log.d(TAG, "Adding reservation - Date: " + dateString + ", Time: " + timeString);
+
+        // Now put Strings into ContentValues
+        values.put(COLUMN_GUEST_NAME, reservation.getCustomerName());
+        values.put(COLUMN_DATE, dateString);
+        values.put(COLUMN_TIME, timeString);  // Already a String
+        values.put(COLUMN_PARTY_SIZE, reservation.getNumberOfPeople());
+        values.put(COLUMN_STATUS, reservation.getStatus());
+
+        long result = db.insert(TABLE_RESERVATION, null, values);
+        db.close();
+
+        Log.d(TAG, "Added reservation for " + reservation.getCustomerName() +
+                " on " + dateString + " at " + timeString + " with ID: " + result);
+
+        return result;
     }
 
     // Get all reservations
@@ -313,24 +345,36 @@ public class DemoData extends SQLiteOpenHelper {
 
         Cursor cursor = null;
         try {
+            // CORRECTED: Use correct column names
+            String[] columns = {
+                    COLUMN_RESERVATION_ID,
+                    COLUMN_GUEST_NAME,
+                    COLUMN_DATE,
+                    COLUMN_TIME,
+                    COLUMN_PARTY_SIZE,
+                    COLUMN_STATUS
+            };
+
             cursor = db.query(TABLE_RESERVATION,
-                    null, null, null, null, null, "date DESC, time DESC");
+                    columns,
+                    null, null, null, null,
+                    COLUMN_DATE + " DESC, " + COLUMN_TIME + " DESC");  // CORRECTED
 
             if (cursor.moveToFirst()) {
                 do {
                     Reservation reservation = new Reservation();
-                    reservation.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                    reservation.setCustomerName(cursor.getString(cursor.getColumnIndexOrThrow("guest_name")));
+                    reservation.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESERVATION_ID)));
+                    reservation.setCustomerName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_GUEST_NAME)));
 
-                    // Parse date (you'll need to adjust this based on your date format)
-                    String dateStr = cursor.getString(cursor.getColumnIndexOrThrow("date"));
-                    reservation.setReservationDate(parseDate(dateStr)); // You need to implement parseDate
+                    // Parse date
+                    String dateStr = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE));
+                    reservation.setReservationDate(parseDate(dateStr));
 
-                    reservation.setReservationTime(cursor.getString(cursor.getColumnIndexOrThrow("time")));
-                    reservation.setNumberOfPeople(cursor.getInt(cursor.getColumnIndexOrThrow("party_size")));
-                    reservation.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
+                    reservation.setReservationTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TIME)));
+                    reservation.setNumberOfPeople(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PARTY_SIZE)));
+                    reservation.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STATUS)));
 
-                    // Set default values for other fields if needed
+                    // Set default values
                     reservation.setCustomerPhone("555-0000");
                     reservation.setCustomerEmail("guest@email.com");
                     reservation.setSpecialRequests("");
@@ -343,7 +387,8 @@ public class DemoData extends SQLiteOpenHelper {
             Log.d(TAG, "Loaded " + reservations.size() + " reservations");
 
         } catch (Exception e) {
-            Log.e(TAG, "Error getting reservations: " + e.getMessage());
+            Log.e(TAG, "Error getting all reservations: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             if (cursor != null) cursor.close();
             db.close();
@@ -359,37 +404,45 @@ public class DemoData extends SQLiteOpenHelper {
 
         Cursor cursor = null;
         try {
-            // Use correct column name: customer_name, not guest_name
+            // CORRECTED: Use the actual column names from your table schema
+            String[] columns = {
+                    COLUMN_RESERVATION_ID,  // "reservation_id"
+                    COLUMN_GUEST_NAME,      // "guest_name"
+                    COLUMN_DATE,            // "date" (NOT "reservation_date")
+                    COLUMN_TIME,            // "time" (NOT "reservation_time")
+                    COLUMN_PARTY_SIZE,      // "party_size"
+                    COLUMN_STATUS           // "status"
+            };
+
+            // CORRECTED: Use correct column names in ORDER BY
             cursor = db.query(TABLE_RESERVATION,
-                    null,
-                    COLUMN_CUSTOMER_NAME + " = ?",  // Use constant!
+                    columns,
+                    COLUMN_GUEST_NAME + " = ?",
                     new String[]{guestName},
                     null, null,
-                    COLUMN_RESERVATION_DATE + " DESC, " + COLUMN_RESERVATION_TIME + " DESC");
+                    COLUMN_DATE + " DESC, " + COLUMN_TIME + " DESC");  // Use COLUMN_DATE and COLUMN_TIME
 
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 do {
                     Reservation reservation = new Reservation();
 
-                    // Use column constants, NOT hardcoded strings!
                     reservation.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RESERVATION_ID)));
-                    reservation.setCustomerName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CUSTOMER_NAME)));
-                    reservation.setCustomerPhone(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CUSTOMER_PHONE)));
-                    reservation.setCustomerEmail(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CUSTOMER_EMAIL)));
-                    reservation.setNumberOfPeople(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NUMBER_OF_PEOPLE)));
+                    reservation.setCustomerName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_GUEST_NAME)));
 
-                    // reservation_date is stored as INTEGER timestamp!
-                    long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_RESERVATION_DATE));
-                    reservation.setReservationDate(new Date(timestamp));
+                    // Parse date string to Date object
+                    String dateStr = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE));
+                    reservation.setReservationDate(parseDate(dateStr));  // Use your parseDate method
 
-                    reservation.setReservationTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RESERVATION_TIME)));
-                    reservation.setSpecialRequests(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SPECIAL_REQUESTS)));
+                    reservation.setReservationTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TIME)));
+                    reservation.setNumberOfPeople(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PARTY_SIZE)));
                     reservation.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STATUS)));
 
-                    reservations.add(reservation);
+                    // Set default values for missing fields
+                    reservation.setCustomerPhone("555-0000");
+                    reservation.setCustomerEmail("guest@email.com");
+                    reservation.setSpecialRequests("");
 
-                    Log.d(TAG, "Loaded reservation for: " + reservation.getCustomerName() +
-                            " | Date: " + reservation.getFormattedDate());
+                    reservations.add(reservation);
 
                 } while (cursor.moveToNext());
             }
@@ -397,7 +450,7 @@ public class DemoData extends SQLiteOpenHelper {
             Log.d(TAG, "Found " + reservations.size() + " reservations for guest: " + guestName);
 
         } catch (Exception e) {
-            Log.e(TAG, "Error getting guest reservations: " + e.getMessage());
+            Log.e(TAG, "Error getting reservations by guest: " + e.getMessage());
             e.printStackTrace();
         } finally {
             if (cursor != null) cursor.close();
@@ -416,7 +469,7 @@ public class DemoData extends SQLiteOpenHelper {
         try {
             cursor = db.query(TABLE_RESERVATION,
                     null,
-                    "id = ?",
+                    "guest_name = ?",
                     new String[]{String.valueOf(id)},
                     null, null, null);
 
@@ -498,12 +551,32 @@ public class DemoData extends SQLiteOpenHelper {
 
     // Helper method to parse date string
     private Date parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return new Date(); // Return current date as fallback
+        }
+
         try {
-            // Assuming format like "Wed, Jan 29, 2025"
-            SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault());
-            return sdf.parse(dateStr);
+            // Try different date formats
+            SimpleDateFormat[] formats = {
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()),        // Format from addReservation
+                    new SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault()),  // Display format
+                    new SimpleDateFormat("d/M/yyyy", Locale.getDefault())           // Format from DatePicker
+            };
+
+            for (SimpleDateFormat sdf : formats) {
+                try {
+                    return sdf.parse(dateStr);
+                } catch (Exception e) {
+                    // Try next format
+                    continue;
+                }
+            }
+
+            Log.e(TAG, "Could not parse date string: " + dateStr);
+            return new Date(); // Return current date as fallback
+
         } catch (Exception e) {
-            Log.e(TAG, "Error parsing date: " + dateStr);
+            Log.e(TAG, "Error parsing date: " + dateStr + " - " + e.getMessage());
             return new Date(); // Return current date as fallback
         }
     }
@@ -525,17 +598,17 @@ public class DemoData extends SQLiteOpenHelper {
             for (int i = 1; i <= 6; i++) {
                 ContentValues values = new ContentValues();
 
-                values.put(COLUMN_CUSTOMER_NAME, "Guest " + i);
-                values.put(COLUMN_CUSTOMER_PHONE, "555-010" + i);
-                values.put(COLUMN_CUSTOMER_EMAIL, "guest" + i + "@email.com");
-                values.put(COLUMN_NUMBER_OF_PEOPLE, i + 1);
+                values.put(COLUMN_GUEST_NAME, "Guest " + i);
+                //values.put(COLUMN_CUSTOMER_PHONE, "555-010" + i);
+                //values.put(COLUMN_CUSTOMER_EMAIL, "guest" + i + "@email.com");
+                values.put(COLUMN_PARTY_SIZE, i + 1);
 
                 // Set date to today + i days
                 calendar.add(Calendar.DAY_OF_MONTH, i);
-                values.put(COLUMN_RESERVATION_DATE, calendar.getTimeInMillis());
+                values.put(COLUMN_DATE, calendar.getTimeInMillis());
 
-                values.put(COLUMN_RESERVATION_TIME, "19:" + (i < 10 ? "0" + i : i));
-                values.put(COLUMN_SPECIAL_REQUESTS, "Sample request " + i);
+                values.put(COLUMN_TIME, "19:" + (i < 10 ? "0" + i : i));
+                //values.put(COLUMN_SPECIAL_REQUESTS, "Sample request " + i);
                 values.put(COLUMN_STATUS, i % 2 == 0 ? "confirmed" : "pending");
 
                 db.insert(TABLE_RESERVATION, null, values);

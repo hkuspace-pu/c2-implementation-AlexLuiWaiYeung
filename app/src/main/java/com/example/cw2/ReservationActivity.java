@@ -2,6 +2,7 @@ package com.example.cw2;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -83,8 +84,16 @@ public class ReservationActivity extends AppCompatActivity implements
         } else {
             fabAdd.setVisibility(View.VISIBLE);
             fabAdd.setOnClickListener(v -> {
+                // DEBUG: Log the current username
+                Log.d("ReservationActivity", "FAB Clicked - currentUsername: " + currentUsername);
+
                 Intent intent = new Intent(this, AddReservationActivity.class);
                 intent.putExtra("customerName", currentUsername);
+
+                // Also add debug to see all extras
+                Bundle extras = intent.getExtras();
+                Log.d("ReservationActivity", "Intent extras: " + (extras != null ? extras.toString() : "null"));
+
                 startActivityForResult(intent, 100);
             });
         }

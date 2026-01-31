@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public class AddReservationActivity extends AppCompatActivity {
 
@@ -27,6 +29,9 @@ public class AddReservationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_reservation);
 
         customerName = getIntent().getStringExtra("customerName");
+
+        // Debug log to check the value
+        Log.d("AddReservation", "Received customerName: " + customerName);
 
         initViews();
         setupDatePicker();
@@ -49,8 +54,13 @@ public class AddReservationActivity extends AppCompatActivity {
                     this,
                     (view, year, month, dayOfMonth) -> {
                         selectedCalendar.set(year, month, dayOfMonth);
-                        String date = String.format("%d/%d/%d", dayOfMonth, month + 1, year);
-                        etDate.setText(date);
+                        // Format date for display (day/month/year)
+                        String displayDate = String.format("%d/%d/%d", dayOfMonth, month + 1, year);
+                        etDate.setText(displayDate);
+
+                        // Also format for database (yyyy-MM-dd)
+                        String dbDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth);
+                        // Store dbDate somewhere if needed
                     },
                     today.get(Calendar.YEAR),
                     today.get(Calendar.MONTH),
@@ -80,15 +90,15 @@ public class AddReservationActivity extends AppCompatActivity {
     private void setupSubmitButton() {
         btnSubmit.setOnClickListener(v -> {
             if (validateForm()) {
-                // Create new reservation
+                // Create new reservation - FIXED: reservationTime should be String, not Date
                 Reservation newReservation = new Reservation(
                         0, // ID will be auto-generated
                         customerName,
-                        "555-1234",
-                        "email@example.com",
+                        "555-1234",  // Default phone
+                        "email@example.com",  // Default email
                         Integer.parseInt(etGuests.getText().toString()),
-                        selectedCalendar.getTime(),
-                        etTime.getText().toString(),
+                        selectedCalendar.getTime(),  // Date object
+                        etTime.getText().toString(),  // String time (already formatted as HH:mm)
                         etRequests.getText().toString(),
                         "pending"
                 );
@@ -134,4 +144,5 @@ public class AddReservationActivity extends AppCompatActivity {
         }
         return true;
     }
+
 }

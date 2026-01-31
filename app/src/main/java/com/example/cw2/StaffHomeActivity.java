@@ -37,6 +37,9 @@ public class StaffHomeActivity extends AppCompatActivity {
     }
 
     private void setupButtonListeners() {
+
+        String username = getIntent().getStringExtra("username");
+
         btnMenu.setOnClickListener(v -> {
             Intent intent = new Intent(StaffHomeActivity.this, MenuActivity.class);
             intent.putExtra("isStaff", true);
@@ -51,13 +54,14 @@ public class StaffHomeActivity extends AppCompatActivity {
 
         btnProfile.setOnClickListener(v -> {
             Intent intent = new Intent(StaffHomeActivity.this, ProfileActivity.class);
-            intent.putExtra("username", true);
+            intent.putExtra("username", username);
             intent.putExtra("isStaff", true);
             startActivity(intent);
         });
 
         btnLogout.setOnClickListener(v -> {
             Intent intent = new Intent(StaffHomeActivity.this, MainActivity.class);
+            intent.putExtra("username", username);
             startActivity(intent);
             finish();
         });

@@ -40,6 +40,9 @@ public class GuestHomeActivity extends AppCompatActivity {
     }
 
     private void setupButtonListeners() {
+
+        String username = getIntent().getStringExtra("username");
+
         btnBrowseMenu.setOnClickListener(v -> {
             Intent intent = new Intent(GuestHomeActivity.this, MenuActivity.class);
             intent.putExtra("isStaff", false);
@@ -53,13 +56,14 @@ public class GuestHomeActivity extends AppCompatActivity {
 
         btnMyReservations.setOnClickListener(v -> {
             Intent intent = new Intent(GuestHomeActivity.this, ReservationActivity.class);
+            intent.putExtra("username", username);
             intent.putExtra("isStaff", false);
             startActivity(intent);
         });
 
         btnProfile.setOnClickListener(v -> {
             Intent intent = new Intent(GuestHomeActivity.this, ProfileActivity.class);
-            intent.putExtra("username", true);
+            intent.putExtra("username", username);
             intent.putExtra("isStaff", false);
             startActivity(intent);
         });
