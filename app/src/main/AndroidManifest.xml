@@ -16,7 +16,7 @@
         android:theme="@style/Theme.Cw2"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".EditReservation"
+            android:name=".EditReservationActivity"
             android:exported="false" />
         <activity
             android:name=".ProfileActivity"

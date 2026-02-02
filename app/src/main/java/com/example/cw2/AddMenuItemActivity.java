@@ -109,8 +109,8 @@ public class AddMenuItemActivity extends AppCompatActivity {
         MenuItem newItem = new MenuItem(
                 generateId(), // Generate unique ID
                 name,
-                priceStr,
                 description,
+                priceStr,
                 selectedImagePath.isEmpty() ? "default_food.jpg" : selectedImagePath
         );
 

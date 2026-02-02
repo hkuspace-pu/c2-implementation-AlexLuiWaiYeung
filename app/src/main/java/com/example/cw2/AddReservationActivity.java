@@ -19,8 +19,8 @@ public class AddReservationActivity extends AppCompatActivity {
 
     private TextInputEditText etDate, etTime, etGuests, etRequests;
     private Button btnSubmit;
-    private Button btnBack = findViewById(R.id.btn_back);
-    private String customerName;
+    private Button btnBack;
+    private String username;
     private Calendar selectedCalendar = Calendar.getInstance();
 
     @Override
@@ -28,10 +28,10 @@ public class AddReservationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_reservation);
 
-        customerName = getIntent().getStringExtra("customerName");
+        username = getIntent().getStringExtra("username");
 
         // Debug log to check the value
-        Log.d("AddReservation", "Received customerName: " + customerName);
+        Log.d("AddReservation", "Received userName: " + username);
 
         initViews();
         setupDatePicker();
@@ -46,6 +46,7 @@ public class AddReservationActivity extends AppCompatActivity {
         etGuests = findViewById(R.id.et_guests);
         etRequests = findViewById(R.id.et_requests);
         btnSubmit = findViewById(R.id.btn_submit);
+        btnBack = findViewById(R.id.btn_back);
     }
 
     private void setupDatePicker() {
@@ -94,7 +95,7 @@ public class AddReservationActivity extends AppCompatActivity {
                 // Create new reservation - FIXED: reservationTime should be String, not Date
                 Reservation newReservation = new Reservation(
                         0, // ID will be auto-generated
-                        customerName,
+                        username,
                         "555-1234",  // Default phone
                         "email@example.com",  // Default email
                         Integer.parseInt(etGuests.getText().toString()),

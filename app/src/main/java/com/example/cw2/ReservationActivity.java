@@ -32,13 +32,13 @@ public class ReservationActivity extends AppCompatActivity implements
     private boolean isStaff = false;
     private String currentUsername;
 
-    DemoData db = new DemoData(this);
+    private DemoData db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reservation);
-
+        db = new DemoData(this);
         // Get user info
         isStaff = getIntent().getBooleanExtra("isStaff", false);
         currentUsername = getIntent().getStringExtra("username");
@@ -47,6 +47,7 @@ public class ReservationActivity extends AppCompatActivity implements
         setupRecyclerView();
         setupFab();
         loadReservations();
+
         db.debugTable();
     }
 
@@ -89,13 +90,14 @@ public class ReservationActivity extends AppCompatActivity implements
                 Log.d("ReservationActivity", "FAB Clicked - currentUsername: " + currentUsername);
 
                 Intent intent = new Intent(this, AddReservationActivity.class);
-                intent.putExtra("customerName", currentUsername);
+                intent.putExtra("username", currentUsername);
+                intent.putExtra("isStaff", false);
 
                 // Also add debug to see all extras
                 Bundle extras = intent.getExtras();
                 Log.d("ReservationActivity", "Intent extras: " + (extras != null ? extras.toString() : "null"));
 
-                startActivityForResult(intent, 100);
+                startActivity(intent);
             });
         }
     }
@@ -105,15 +107,14 @@ public class ReservationActivity extends AppCompatActivity implements
 
         new Thread(() -> {
             // Use DemoData to get reservations
-            DemoData dbHelper = new DemoData(this);
 
             List<Reservation> reservations;
             if (!isStaff) {
                 // For guest: get only their reservations
-                reservations = dbHelper.getReservationsByGuest(currentUsername);
+                reservations = db.getReservationsByGuest(currentUsername);
             } else {
                 // For staff: get all reservations
-                reservations = dbHelper.getAllReservations();
+                reservations = db.getAllReservations();
             }
 
             runOnUiThread(() -> {
