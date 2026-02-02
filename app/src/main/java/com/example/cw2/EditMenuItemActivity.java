@@ -18,7 +18,7 @@ public class EditMenuItemActivity extends AppCompatActivity {
     private static final String TAG = "EditMenuItemActivity";
 
     private EditText etName, etDescription, etPrice, etImageUrl;
-    private Button btnUpdate, btnDelete;
+    private Button btnUpdate, btnDelete, btnBack;
     private DemoData dbHelper;
     private MenuItem currentItem;
     private int menuItemId = -1;
@@ -64,6 +64,7 @@ public class EditMenuItemActivity extends AppCompatActivity {
 
         // Setup button listeners
         setupListeners();
+
     }
 
     private void initViews() {
@@ -73,6 +74,7 @@ public class EditMenuItemActivity extends AppCompatActivity {
         etImageUrl = findViewById(R.id.et_image_url);
         btnUpdate = findViewById(R.id.btn_update);
         btnDelete = findViewById(R.id.btn_delete);
+        btnBack = findViewById(R.id.btn_back);
     }
 
     private void loadMenuItem() {
@@ -103,6 +105,8 @@ public class EditMenuItemActivity extends AppCompatActivity {
         btnUpdate.setOnClickListener(v -> updateMenuItem());
 
         btnDelete.setOnClickListener(v -> showDeleteConfirmation());
+
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void updateMenuItem() {

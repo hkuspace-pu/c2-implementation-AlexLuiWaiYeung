@@ -42,7 +42,6 @@ public class ReservationActivity extends AppCompatActivity implements
         // Get user info
         isStaff = getIntent().getBooleanExtra("isStaff", false);
         currentUsername = getIntent().getStringExtra("username");
-
         initViews();
         setupToolbar();
         setupRecyclerView();
@@ -64,8 +63,10 @@ public class ReservationActivity extends AppCompatActivity implements
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        toolbar.setNavigationOnClickListener(v -> finish());
         TextView tvTitle = toolbar.findViewById(R.id.tv_title);
         tvTitle.setText(isStaff ? "All Reservations" : "My Reservations");
     }

@@ -19,7 +19,7 @@ public class AddReservationActivity extends AppCompatActivity {
 
     private TextInputEditText etDate, etTime, etGuests, etRequests;
     private Button btnSubmit;
-
+    private Button btnBack = findViewById(R.id.btn_back);
     private String customerName;
     private Calendar selectedCalendar = Calendar.getInstance();
 
@@ -37,6 +37,7 @@ public class AddReservationActivity extends AppCompatActivity {
         setupDatePicker();
         setupTimePicker();
         setupSubmitButton();
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void initViews() {
